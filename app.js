@@ -1,16 +1,17 @@
 // security check
 let lockScreen = document.getElementById("lock-screen");
 let enter = lockScreen.querySelector("button");
+let passkeys = ["460101", "myqueue"];
 
 function security() {
   let pin = lockScreen.querySelector("input").value;
-  let passkeys = ["460101", "myqueue"];
 
   if (passkeys.includes(pin)) {
     alert("Welcome back");
     lockScreen.classList.add("hidden");
   } else {
     alert("wrong pin");
+    return;
   }
 }
 // Add event listener for button click
@@ -70,7 +71,13 @@ function addGoalToList(goalText) {
   doneButton.textContent = "Done";
 
   doneButton.addEventListener("click", function () {
-    moveToCompleted(goalText, listItem);
+    let isDone = prompt("enter you pin");
+    if (passkeys.includes(isDone)) {
+      moveToCompleted(goalText, listItem);
+    } else {
+      alert("you may wrongs");
+      return;
+    }
   });
 
   listItem.appendChild(goalSpan);
@@ -101,8 +108,14 @@ function addCompletedTask(goalText) {
   removeButton.textContent = "rm";
 
   removeButton.addEventListener("click", function () {
-    listItem.remove(); // Remove the task from the completed list
-    saveQueue(); // Save the updated state
+    let isRm = prompt("enter you pin");
+    if (passkeys.includes(isRm)) {
+      listItem.remove(); // Remove the task from the completed list
+      saveQueue(); // Save the updated state
+    } else {
+      alert("you may wrongs");
+      return;
+    }
   });
 
   listItem.appendChild(goalSpan);
