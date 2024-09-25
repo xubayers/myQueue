@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Queue</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 text-gray-800">
+    <!-- siqurity -->
+    <div
+      id="lock-screen"
+      class="z-10 absolute w-full h-full bg-black flex flex-col justify-center items-center"
+    >
+      <div>
+        <p class="text-white mb-2">Enter Passkey</p>
+        <input type="text" placeholder="Your pin" class="input" />
+        <button class="btn hover:bg-red-300 border-none">Enter</button>
+      </div>
+    </div>
+    <!-- Header Section -->
+    <header class="bg-blue-600 text-white text-center py-6 shadow-lg">
+      <h1 class="text-4xl font-bold">My Learning Queue</h1>
+      <p class="md:text-lg text-sm mt-2">
+        Keep track of what want to learn next (FIFO)
+      </p>
+    </header>
+
+    <!-- Main Section -->
+    <main class="container mx-auto mt-10 px-4">
+      <!-- Input Section -->
+      <div class="collapse">
+        <input type="checkbox" />
+        <div class="collapse-title text-3xl font-bold">+</div>
+        <div class="collapse-content">
+          <section class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Add New 'G' item</h2>
+
+            <!-- Input and Button Row -->
+            <div class="flex space-x-4">
+              <input
+                type="text"
+                id="learningGoal"
+                placeholder="Enter learning goal..."
+                class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+
+              <button
+                id="addGoal"
+                class="bg-blue-600 text-white px-4 py-2 rounded-md shadow hover:bg-blue-700"
+              >
+                Add
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- Queue Section -->
+
+      <section class="mt-10">
+        <div class="collapse bg-base-200">
+          <input type="checkbox" />
+          <div class="collapse-title text-xl font-medium rounded-xl mb-4">
+            <h2 class="text-xl font-semibold mb-4">Running Queue</h2>
+          </div>
+          <div class="collapse-content">
+            <!-- Queue List -->
+            <ul
+              id="learningQueue"
+              class="bg-white shadow-md rounded-lg p-6 space-y-3"
+            >
+              <!-- Items will be dynamically added here -->
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Completed Tasks Section -->
+
+      <section class="mt-10">
+        <!-- Completed List -->
+        <div class="collapse bg-base-200">
+          <input type="checkbox" />
+          <div class="collapse-title text-xl font-medium rounded-xl mb-4">
+            <h2 class="text-xl font-semibold">Completed Tasks</h2>
+          </div>
+          <div class="collapse-content">
+            <ul
+              id="completedQueue"
+              class="bg-white shadow-md rounded-lg p-6 space-y-3"
+            >
+              <!-- Completed tasks will be moved here -->
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-20 py-6 bg-gray-800 text-white text-center">
+      <p class="text-sm">&copy; 2024 My Learning Queue. All rights reserved.</p>
+    </footer>
+
+    <!-- Script for Adding and Removing Goals (with Local Storage) -->
+    <script>
+      // security check
+      let lockScreen = document.getElementById("lock-screen");
+
+      lockScreen.querySelector("button").addEventListener("click", function () {
+        let pin = lockScreen.querySelector("input").value;
+        let passkeys = ["460101", "myqueue"];
+
+        if (passkeys.includes(pin)) {
+          alert("Welcome back");
+          lockScreen.classList.add("hidden");
+        } else {
+          alert("wrong pin");
+        }
+      });
+
+      const addGoalButton = document.getElementById("addGoal");
+      const learningGoalInput = document.getElementById("learningGoal");
+      const learningQueue = document.getElementById("learningQueue");
+      const completedQueue = document.getElementById("completedQueue");
+
+      // Function to load stored data from Local Storage
+      function loadQueue() {
+        const storedQueue =
+          JSON.parse(localStorage.getItem("learningQueue")) || [];
+        const storedCompletedQueue =
+          JSON.parse(localStorage.getItem("completedQueue")) || [];
+
+        storedQueue.forEach((goal) => addGoalToList(goal));
+        storedCompletedQueue.forEach((goal) => addCompletedTask(goal));
+      }
+
+      // Function to save data to Local Storage
+      function saveQueue() {
+        const goals = [];
+        document.querySelectorAll("#learningQueue li span").forEach((span) => {
+          goals.push(span.textContent);
+        });
+        localStorage.setItem("learningQueue", JSON.stringify(goals));
+
+        const completedGoals = [];
+        document.querySelectorAll("#completedQueue li span").forEach((span) => {
+          completedGoals.push(span.textContent);
+        });
+        localStorage.setItem("completedQueue", JSON.stringify(completedGoals));
+      }
+
+      // Function to add a goal to the list
+      function addGoalToList(goalText) {
+        const listItem = document.createElement("li");
+        listItem.className =
+          "flex items-end justify-between p-4 bg-gray-50 border rounded-lg";
+
+        const goalSpan = document.createElement("span");
+        goalSpan.className = "text-lg";
+        goalSpan.textContent = goalText;
+
+        const doneButton = document.createElement("button");
+        doneButton.className =
+          "bg-green-500 text-white px-2 py-1 rounded-md hover:bg-green-600";
+        doneButton.textContent = "Done";
+
+        doneButton.addEventListener("click", function () {
+          moveToCompleted(goalText, listItem);
+        });
+
+        listItem.appendChild(goalSpan);
+        listItem.appendChild(doneButton);
+        learningQueue.appendChild(listItem);
+      }
+
+      // Function to move a task to completed list
+      function moveToCompleted(goalText, listItem) {
+        listItem.remove(); // Remove the task from the current queue
+        addCompletedTask(goalText); // Add to completed tasks
+        saveQueue(); // Save the updated state
+      }
+
+      // Function to add a task to the completed list
+      function addCompletedTask(goalText) {
+        const listItem = document.createElement("li");
+        listItem.className =
+          "flex items-end justify-between p-4 bg-gray-50 border rounded-lg";
+
+        const goalSpan = document.createElement("span");
+        goalSpan.className = "text-lg";
+        goalSpan.textContent = goalText;
+
+        const removeButton = document.createElement("button");
+        removeButton.className =
+          "bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600";
+        removeButton.textContent = "rm";
+
+        removeButton.addEventListener("click", function () {
+          listItem.remove(); // Remove the task from the completed list
+          saveQueue(); // Save the updated state
+        });
+
+        listItem.appendChild(goalSpan);
+        listItem.appendChild(removeButton);
+        completedQueue.appendChild(listItem);
+      }
+
+      // Event listener for adding goals
+      addGoalButton.addEventListener("click", function () {
+        const goalText = learningGoalInput.value.trim();
+
+        if (goalText) {
+          addGoalToList(goalText);
+          saveQueue(); // Save the new state after adding
+          learningGoalInput.value = ""; // Clear input field
+        }
+      });
+
+      // Load the queue from Local Storage on page load
+      window.addEventListener("DOMContentLoaded", loadQueue);
+    </script>
+  </body>
+</html>
